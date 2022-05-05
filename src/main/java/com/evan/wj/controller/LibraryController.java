@@ -3,12 +3,15 @@ package com.evan.wj.controller;
 import com.evan.wj.pojo.Book;
 import com.evan.wj.service.BookService;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
+@ResponseBody
 public class LibraryController {
     @Autowired
     BookService bookService;
@@ -38,5 +41,16 @@ public class LibraryController {
             return list();
         }
     }
+
+    @GetMapping("/api/search")
+    public List<Book> searchResult(@RequestParam("keywords") String keywords) {
+        // 关键词为空时查询出所有书籍
+        if (Objects.isNull(keywords) || Objects.equals(StringUtils.EMPTY, keywords)) {
+            return bookService.list();
+        } else {
+            return bookService.Search(keywords);
+        }
+    }
+
 }
 

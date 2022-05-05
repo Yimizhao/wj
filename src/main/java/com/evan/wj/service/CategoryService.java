@@ -11,11 +11,8 @@ import java.util.List;
 @Service
 public class CategoryService {
 
-    private CategoryDAO categoryDAO;
     @Autowired
-    public CategoryService(CategoryDAO categoryDAO) {
-        this.categoryDAO = categoryDAO;
-    }
+    CategoryDAO categoryDAO;
 
     public List<Category> list() {
         return categoryDAO.findAll(Sort.by(Sort.Direction.DESC, "id"));

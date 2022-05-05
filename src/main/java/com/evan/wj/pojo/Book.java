@@ -24,7 +24,7 @@ public class Book {
     private String press;
     private String abs;
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 
