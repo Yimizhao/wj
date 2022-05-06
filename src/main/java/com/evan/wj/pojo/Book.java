@@ -13,6 +13,7 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+
     @ManyToOne
     @JoinColumn(name = "cid")
     private Category category;
@@ -31,7 +32,6 @@ public class Book {
     public void setId(int id) {
         this.id = id;
     }
-
 
     public String getCover() {
         return cover;
@@ -86,4 +86,11 @@ public class Book {
         this.abs = abs;
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 }
