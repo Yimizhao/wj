@@ -1,19 +1,26 @@
 package com.evan.wj.controller;
 
+import com.evan.wj.env.WJConstants;
 import com.evan.wj.pojo.User;
 import com.evan.wj.result.Result;
+import com.evan.wj.result.ResultFactory;
 import com.evan.wj.service.UserService;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.crypto.SecureRandomNumberGenerator;
+import org.apache.shiro.crypto.hash.SimpleHash;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.HtmlUtils;
 
-import javax.servlet.http.HttpSession;
+import java.util.Objects;
 
-@Controller
+@RestController
 public class LoginController {
 
     UserService userService;
@@ -23,18 +30,46 @@ public class LoginController {
         this.userService = userService;
     }
 
-    @CrossOrigin
-    @PostMapping(value = "api/login")
+    @PostMapping(value = "/api/login")
     @ResponseBody
-    public Result login(@RequestBody User requestUser, HttpSession httpSession) {
-        String username = HtmlUtils.htmlEscape(requestUser.getUsername());
-        String password = requestUser.getPassword();
-        if (userService.isExist(username, password)) {
-
-            httpSession.setAttribute("user", userService.getUserBynameAndpassword(username, password));
-            return new Result(200);
-        } else {
-            return new Result(400);
+    public Result login(@RequestBody User requestUser) {
+        String username = requestUser.getUsername();
+        Subject subject = SecurityUtils.getSubject();
+//        subject.getSession().setTimeout(10000);
+        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(username, requestUser.getPassword());
+        try {
+            subject.login(usernamePasswordToken);
+            return ResultFactory.buildSuccessResult(username);
+        } catch (AuthenticationException e) {
+            String message = "账号密码错误";
+            return ResultFactory.buildFailResult(message);
         }
+    }
+
+
+    @PostMapping(value = "/api/register")
+    public Result register(@RequestBody User user) {
+        String userName = user.getUsername();
+        // 用户名
+        userName = HtmlUtils.htmlEscape(userName);
+        // DB查询用户
+        User dbUser = userService.getUserByname(userName);
+        if (Objects.nonNull(dbUser)){
+            // 用户名存在的场合
+            return ResultFactory.buildFailResult("用户名已被占用");
+        }
+
+        String salt = new SecureRandomNumberGenerator().nextBytes().toString();
+        // 用户明文密码
+        String userPassword = user.getPassword();
+        // 加密后密码
+        String hexEncoded = new SimpleHash(WJConstants.ALGORITHMNAME_MD5, userPassword, salt, WJConstants.HASHITERATIONS).toString();
+        // 填充新用户对象
+        user.setPassword(hexEncoded);
+        user.setSalt(salt);
+        // 将注册用户登入数据库
+        userService.save(user);
+        // 返回
+        return ResultFactory.buildSuccessResult(user);
     }
 }
