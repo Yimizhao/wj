@@ -12,10 +12,7 @@ import org.apache.shiro.crypto.SecureRandomNumberGenerator;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
 
 import java.util.Objects;
@@ -30,13 +27,13 @@ public class LoginController {
         this.userService = userService;
     }
 
-    @PostMapping(value = "/api/login")
-    @ResponseBody
+    @PostMapping(value = "/login")
     public Result login(@RequestBody User requestUser) {
         String username = requestUser.getUsername();
         Subject subject = SecurityUtils.getSubject();
 //        subject.getSession().setTimeout(10000);
         UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(username, requestUser.getPassword());
+        usernamePasswordToken.setRememberMe(true);
         try {
             subject.login(usernamePasswordToken);
             return ResultFactory.buildSuccessResult(username);
@@ -47,14 +44,14 @@ public class LoginController {
     }
 
 
-    @PostMapping(value = "/api/register")
+    @PostMapping(value = "/register")
     public Result register(@RequestBody User user) {
         String userName = user.getUsername();
         // 用户名
         userName = HtmlUtils.htmlEscape(userName);
         // DB查询用户
         User dbUser = userService.getUserByname(userName);
-        if (Objects.nonNull(dbUser)){
+        if (Objects.nonNull(dbUser)) {
             // 用户名存在的场合
             return ResultFactory.buildFailResult("用户名已被占用");
         }
@@ -71,5 +68,17 @@ public class LoginController {
         userService.save(user);
         // 返回
         return ResultFactory.buildSuccessResult(user);
+    }
+
+    @GetMapping(value = "/logout")
+    public Result logout() {
+        Subject subject = SecurityUtils.getSubject();
+        subject.logout();
+        return ResultFactory.buildSuccessResult("成功登出");
+    }
+
+    @GetMapping(value = "/authentication")
+    public String authentication(){
+        return "身份认证成功";
     }
 }

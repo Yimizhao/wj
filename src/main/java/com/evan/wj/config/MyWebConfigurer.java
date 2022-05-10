@@ -18,21 +18,26 @@ public class MyWebConfigurer implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(getLoginInterceptor()).addPathPatterns("/**").excludePathPatterns("/index.html");
+        registry.addInterceptor(getLoginInterceptor())
+                .addPathPatterns("/**")
+                .excludePathPatterns("/index.html")
+                .excludePathPatterns("/login")
+                .excludePathPatterns("/logout");
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         //所有请求都允许跨域
         registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("*")
+                .allowCredentials(true)
+                .allowedOrigins("http://localhost:8080")
+                .allowedMethods("POST", "GET", "PUT", "OPTIONS", "DELETE")
                 .allowedHeaders("*");
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/api/file/**").addResourceLocations("file:" + "D:\\workspace_idea\\img\\");
+        registry.addResourceHandler("file/**").addResourceLocations("file:" + "D:\\workspace_idea\\img\\");
     }
 
 }
